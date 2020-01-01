@@ -1,11 +1,8 @@
 function Get-Options([System.Collections.Hashtable]$Options) {
   # Definition of the Default Options
-  function Get-DefaultOptions() {
+  function GetDefaultOptions() {
     return @{
       EntryFile = [String](Join-Path (Get-Location) "./main.ps1")
-      test = @{
-        test = 3
-      }
     }
   }
   
@@ -28,8 +25,21 @@ function Get-Options([System.Collections.Hashtable]$Options) {
     }
     return $Result
   }
+
+  # Helper Funktion to test the Validity of the Result Options
+  function PassCheck([String]$Message, [scriptblock]$Test) {
+    $Result = $false
+    try {
+      $Result = $Test.Invoke()
+    } finally {
+      if (!$Result) {
+        throw $Message
+      }
+    }
+  }
   
   # Calculate the Merge from Default Options and the supplied $Options
-  $Result = RecursiveMerge -Default (Get-DefaultOptions) -Override $Options
+  $Result = RecursiveMerge -Default (GetDefaultOptions) -Override $Options
+  PassCheck -Message "EntryFile Not Found" -Test { Test-Path -Path $Result.EntryFile -PathType Leaf }
   return $Result
 }
